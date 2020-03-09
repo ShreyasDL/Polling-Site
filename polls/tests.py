@@ -31,12 +31,28 @@ class QuestionIndexViewTests(TestCase) :
     def test_no_questions(self) :
         response = self.client.get(reverse('polls:index'))
         self.assertEqual(response.status_code,200)
-        self.assertContains(response,"No polls available.")
+        self.assertContains(response,"No polls are available.")
         self.assertQuerysetEqual(response.context['latest_question_list'],[])
     
     def test_past_questions(self) :
         question = create_question("Past Question.",days=-30)
         response = self.client.get(reverse('polls:index'))
-        self.assertQuerysetEqual(response.context['latest_question'],['<Question: Past Question.>'])
+        self.assertQuerysetEqual(response.context['latest_question_list'],['<Question: Past Question.>'])
     
-    def test_futu
+    def test_futuure_questions(self) :
+        question = create_question("Future Question.",days=30)
+        response = self.client.get(reverse('polls:index'))
+        self.assertContains(response,"No polls are available.")
+        self.assertQuerysetEqual(response.context['latest_question_list'],[])
+    
+    def test_past_and_future_questions(self) :
+        past_question = create_question("Past Question.",days=-30)
+        future_question = create_question("Future Question.",days=30)
+        response = self.client.get(reverse('polls:index'))
+        self.assertQuerysetEqual(response.context['latest_question_list'],['<Question: Past Question.>'])
+
+    def test_two_past_questions(self) :
+        question1 = create_question("Past Question1",days = -30)
+        question2 = create_question("Past Question2",days = -5)
+        response = self.client.get(reverse('polls:index'))
+        self.assertQuerysetEqual(response.context['latest_question_list'],['<Question: Past Question2>','<Question: Past Question1>'])
